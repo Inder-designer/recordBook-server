@@ -1,6 +1,5 @@
 import { Types } from "mongoose";
 import Record from "../../models/record/record.model";
-import Entry from "../../models/record/entry.model";
 import { MEMBER_ROLE, MemberRole } from "../../constants/memberRole";
 import { addMemberInput, CreateRecordInput, UpdateRecordInput } from "../../schemas/record/record.validation";
 import { ErrorHandler } from "../../utils/errorhandler";
