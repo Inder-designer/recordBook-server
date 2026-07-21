@@ -20,7 +20,6 @@ export const loginUser = catchAsyncErrors(
     async (req: Request, res: Response, next: NextFunction) => {
 
         passport.authenticate("local", async (err: unknown, user: IUser, info: Record<string, any>) => {
-            console.log(req.body);
             if (err) return next(err);
             if (!user) {
                 return next(new ErrorHandler(info.message || "Invalid credentials", 401));

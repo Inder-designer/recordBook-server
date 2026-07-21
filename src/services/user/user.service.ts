@@ -23,7 +23,7 @@ export const createUserService = async (userData: CreateUserInput) => {
 export const findUserService = async (
     email: string
 ) => {
-    const user = await User.findOne({ email: email.toLowerCase() }).select("_id fullName email");
+    const user = await User.findOne({ email: email.toLowerCase() }).select("_id fullName email initials");
     if (!user) {
         throw new ErrorHandler(
             "User not found",

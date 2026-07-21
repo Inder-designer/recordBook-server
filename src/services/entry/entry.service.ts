@@ -53,8 +53,6 @@ class EntryService {
 
             return result;
         } catch (error) {
-            console.log(error);
-
             throw error;
         } finally {
             await session.endSession();
@@ -96,15 +94,11 @@ class EntryService {
     ) {
         return this.withTransaction(async (session) => {
 
-            console.log(userId, payload);
-
             const record = await Record.findOne({
                 _id: recordId,
                 isActive: true,
                 isDeleted: false,
             }).session(session);
-
-            console.log("record:", record);
 
             if (!record) {
                 throw new ErrorHandler("Record not found", 404);
@@ -233,6 +227,7 @@ class EntryService {
                 session
             );
 
+            await entry.populate("createdBy", "fullName email");
             return entry;
         });
     }
