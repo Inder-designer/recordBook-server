@@ -8,16 +8,17 @@ export const createEntrySchema = z.object({
 
         amount: z
             .number()
-            .positive("Amount must be greater than 0"),
+            .positive("Amount must be greater than 0")
+            .max(999999999, "Amount can't be greater than 999999999"),
 
         remark: z
             .string()
-            .max(500, "Remark cannot exceed 500 characters")
+            .max(150, "Remark cannot exceed 150 characters")
             .optional(),
 
         category: z
             .string()
-            .max(100, "Category cannot exceed 100 characters")
+            .max(50, "Category cannot exceed 100 characters")
             .optional(),
 
         paymentMethod: z
