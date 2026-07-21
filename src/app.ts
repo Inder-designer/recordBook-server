@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import passport from "passport";
-import './config/passport.ts';
+import './config/passport';
 import { errorMiddleware } from "./middleware/errorMiddleware";
 import { validateSession } from "./middleware/validateSession";
 import routes from "./routes";
