@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { createUserService, findUserService } from "../../services/user/user.service";
+import { createUserService, findUserService, updateNameService } from "../../services/user/user.service";
 import { catchAsyncErrors } from "../../utils/catchAsyncErrors";
 import { ResponseHandler } from '../../utils/resHandler';
 import { CreateUserInput } from '../../schemas/user/user.schema';
@@ -42,8 +42,6 @@ export const loginUser = catchAsyncErrors(
 );
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
-    // Clear sessionId from user document
-    const user = req.user as IUser;
 
     req.logout((err) => {
         if (err) {
@@ -63,6 +61,15 @@ export const getMe = catchAsyncErrors(
             return next(new ErrorHandler("User not authenticated", 401));
         }
         return ResponseHandler(res, 200, "Profile fetched successfully", user)
+    }
+)
+
+export const updateUserName = catchAsyncErrors(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const user = req.user as IUser;
+        const updateduser = await updateNameService(user._id, req.body)
+
+        return ResponseHandler(res, 200, "Name updated successfully", updateduser)
     }
 )
 

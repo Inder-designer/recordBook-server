@@ -1,5 +1,6 @@
+import { Types } from "mongoose";
 import User from "../../models/user/User";
-import { CreateUserInput } from "../../schemas/user/user.schema";
+import { CreateUserInput, UpdateNameInput } from "../../schemas/user/user.schema";
 import { ErrorHandler } from "../../utils/errorhandler";
 import { initialsGenerate } from "../../utils/initialsGenerate";
 
@@ -18,6 +19,27 @@ export const createUserService = async (userData: CreateUserInput) => {
     })
 
     return newUser;
+}
+
+export const updateNameService = async (
+    userId: Types.ObjectId,
+    payload: UpdateNameInput
+) => {
+    const user = await User.findByIdAndUpdate(
+        userId,
+        {
+            $set: {
+                fullName: payload.fullName,
+            },
+        },
+        {
+            new: true,
+            runValidators: true,
+        }
+    );
+
+
+    return user
 }
 
 export const findUserService = async (

@@ -8,10 +8,17 @@ export const createUserSchema = z.object({
         confirmPassword: z.string().nonempty("Confirm Password is required"),
         number: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number").optional(),
     })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    }),
+        .refine((data) => data.password === data.confirmPassword, {
+            message: "Passwords do not match",
+            path: ["confirmPassword"],
+        }),
 });
 
+export const updateNameSchema = z.object({
+    body: z.object({
+        fullName: z.string().trim().nonempty("Name is required").min(2, "Name must be at least 2 characters long").max(100, "Name must be at most 100 characters long"),
+    })
+})
+
 export type CreateUserInput = z.infer<typeof createUserSchema>["body"];
+export type UpdateNameInput = z.infer<typeof updateNameSchema>["body"];
