@@ -192,10 +192,12 @@ class RecordService {
 
         await record.save();
 
-        return await record.populate(
-            "members.user",
-            "fullName email"
-        );;
+        await record.populate([
+            { path: "createdBy", select: "fullName email" },
+            { path: "members.user", select: "fullName email" },
+        ]);
+
+        return record;
     }
 
     async removeMember(

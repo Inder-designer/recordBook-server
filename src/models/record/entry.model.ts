@@ -50,6 +50,16 @@ const EntrySchema = new mongoose.Schema<IEntry>(
 )
 
 EntrySchema.index({ recordId: 1, transactionDate: -1 })
+// Date + Type
+EntrySchema.index({ recordId: 1, type: 1, transactionDate: -1, });
+// Payment Method
+EntrySchema.index({ recordId: 1, paymentMethod: 1, transactionDate: -1, });
+// Member
+EntrySchema.index({ recordId: 1, createdBy: 1, transactionDate: -1, });
+// Combined index for common filter combinations
+EntrySchema.index({
+    recordId: 1, type: 1, paymentMethod: 1, createdBy: 1, transactionDate: -1,
+});
 // For user activity
 EntrySchema.index({ createdBy: 1, transactionDate: -1 });
 

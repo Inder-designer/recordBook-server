@@ -133,9 +133,41 @@ class EntryService {
         });
     }
 
+    // async getEntries(
+    //     userId: Types.ObjectId,
+    //     recordId: string | string[]
+    // ) {
+    //     const record = await Record.findOne({
+    //         _id: recordId,
+    //         isActive: true,
+    //         isDeleted: false,
+    //         $or: [
+    //             { createdBy: userId },
+    //             { "members.user": userId },
+    //         ],
+    //     });
+
+    //     if (!record) {
+    //         throw new ErrorHandler("Record not found", 404);
+    //     }
+
+    //     return await Entry.find({ recordId })
+    //         .populate("createdBy", "fullName email")
+    //         .sort({ transactionDate: -1 });
+    // }
+
     async getEntries(
         userId: Types.ObjectId,
-        recordId: string | string[]
+        recordId: string,
+        query: {
+            startDate?: string;
+            endDate?: string;
+            type?: string;
+            paymentMethod?: string;
+            member?: string;
+            page?: number;
+            limit?: number;
+        }
     ) {
         const record = await Record.findOne({
             _id: recordId,
@@ -151,9 +183,155 @@ class EntryService {
             throw new ErrorHandler("Record not found", 404);
         }
 
-        return await Entry.find({ recordId })
-            .populate("createdBy", "fullName email")
-            .sort({ transactionDate: -1 });
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const match: any = {
+            recordId: new Types.ObjectId(recordId),
+        };
+
+        if (query.type) {
+            match.type = query.type;
+        }
+
+        if (query.paymentMethod) {
+            match.paymentMethod = query.paymentMethod;
+        }
+
+        if (query.member) {
+            match.createdBy = new Types.ObjectId(query.member);
+        }
+
+        if (query.startDate || query.endDate) {
+            match.transactionDate = {};
+
+            if (query.startDate) {
+                match.transactionDate.$gte = new Date(query.startDate);
+            }
+
+            if (query.endDate) {
+                const end = new Date(query.endDate);
+                end.setHours(23, 59, 59, 999);
+                match.transactionDate.$lte = end;
+            }
+        }
+
+        const [result] = await Entry.aggregate([
+            {
+                $match: match,
+            },
+
+            {
+                $facet: {
+                    entries: [
+                        {
+                            $sort: {
+                                transactionDate: -1,
+                            },
+                        },
+                        {
+                            $skip: skip,
+                        },
+                        // {
+                        //     $limit: limit,
+                        // },
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "createdBy",
+                                foreignField: "_id",
+                                as: "createdBy",
+                            },
+                        },
+                        {
+                            $unwind: "$createdBy",
+                        },
+                        {
+                            $project: {
+                                amount: 1,
+                                type: 1,
+                                remark: 1,
+                                category: 1,
+                                paymentMethod: 1,
+                                transactionDate: 1,
+                                createdAt: 1,
+                                "createdBy._id": 1,
+                                "createdBy.fullName": 1,
+                                "createdBy.email": 1,
+                            },
+                        },
+                    ],
+
+                    pagination: [
+                        {
+                            $count: "total",
+                        },
+                    ],
+
+                    summary: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalCashIn: {
+                                    $sum: {
+                                        $cond: [
+                                            { $eq: ["$type", "cashIn"] },
+                                            "$amount",
+                                            0,
+                                        ],
+                                    },
+                                },
+                                totalCashOut: {
+                                    $sum: {
+                                        $cond: [
+                                            { $eq: ["$type", "cashOut"] },
+                                            "$amount",
+                                            0,
+                                        ],
+                                    },
+                                },
+                                totalTransactions: {
+                                    $sum: 1,
+                                },
+                            },
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                totalCashIn: 1,
+                                totalCashOut: 1,
+                                totalTransactions: 1,
+                                currentBalance: {
+                                    $subtract: [
+                                        "$totalCashIn",
+                                        "$totalCashOut",
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        const total = result.pagination[0]?.total || 0;
+
+        return {
+            entries: result.entries,
+            summary: result.summary[0] || {
+                totalCashIn: 0,
+                totalCashOut: 0,
+                currentBalance: 0,
+                totalTransactions: 0,
+            },
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async getEntryById(

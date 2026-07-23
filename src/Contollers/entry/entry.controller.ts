@@ -27,9 +27,10 @@ export const getEntries = catchAsyncErrors(
     async (req: Request, res: Response) => {
         const user = req.user as IUser;
 
-        const entries = await EntryService.getEntries(
+        const { entries, pagination, summary } = await EntryService.getEntries(
             user._id,
-            req.params.recordId
+            req.params.recordId as string,
+            req.query as any
         );
 
         return ResponseHandler(
@@ -37,7 +38,11 @@ export const getEntries = catchAsyncErrors(
             200,
             "Entries fetched successfully",
             entries,
-            { totalEntries: entries.length }
+            {
+                totalEntries: entries.length,
+                pagination,
+                summary
+            }
         );
     }
 );
